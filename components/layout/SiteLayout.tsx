@@ -5,6 +5,7 @@ import Footer from "@/components/layout/Footer";
 import Header from "@/components/layout/Header";
 import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
+import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
@@ -45,7 +46,28 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           "flex-1", 
           isTransactional ? "pt-24 lg:pt-32" : "pt-0"
         )}>
-          {children}
+          {/*
+            Crossfade between routes instead of an instant swap. App
+            Router keeps this layout mounted across navigations, so
+            without this the old page's content is simply replaced by
+            the new one the instant it's ready — which reads as a jarring
+            flash, especially when the two pages differ in background,
+            height, or content. `mode="wait"` lets the outgoing page fade
+            out before the incoming one fades in, so nothing pops.
+            `initial={false}` skips animating in on the very first load
+            (the splash screen already owns that moment).
+          */}
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={pathname}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.25, ease: "easeInOut" }}
+            >
+              {children}
+            </motion.div>
+          </AnimatePresence>
         </div>
 
         {/* If you want to hide the footer on the success page, you can do: {!isSuccessPage && <Footer />} */}

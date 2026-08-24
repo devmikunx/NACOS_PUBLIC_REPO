@@ -8,6 +8,7 @@ import { paths } from "@/lib/api/paths";
 import { ApiClientError } from "@/lib/api/errors";
 import type { CommunityEvent } from "@/lib/api/community-events";
 import { formatDate } from "@/lib/utils";
+import { ShareEventButton } from "@/components/public/Events/ShareEventButton";
 
 export async function generateMetadata({
   params,
@@ -40,13 +41,17 @@ export default async function EventDetailPage({
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-12 sm:py-16">
-      <Link
-        href="/#events"
-        className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[#168706] hover:text-[#0D5104] transition-colors mb-8"
-      >
-        <ArrowLeft className="w-4 h-4" />
-        Back to Events
-      </Link>
+      <div className="flex items-center justify-between gap-4 mb-8">
+        <Link
+          href="/events"
+          className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[#168706] hover:text-[#0D5104] transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to Events
+        </Link>
+
+        <ShareEventButton title={event.title} text={event.description} />
+      </div>
 
       {event.imageUrl ? (
         <div className="relative w-full aspect-[16/9] overflow-hidden rounded-tr-3xl rounded-bl-3xl mb-8">

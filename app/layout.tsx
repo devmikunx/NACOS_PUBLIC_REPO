@@ -1,10 +1,56 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import "./globals.css";
 import { Providers } from "@/components/layout/providers";
 import SplashScreen from "@/components/layout/SplashScreen";
 import SiteLayout from "@/components/layout/SiteLayout";
+
+// Keep these in sync with the same-named checks the splash screen itself
+// would otherwise run client-side. They're duplicated here (as plain
+// strings, not imported) because this string is injected into a
+// beforeInteractive <script> tag that runs standalone, before any of our
+// React/TS modules exist.
+const SPLASH_SESSION_KEY = "nacosSplashShownThisSession";
+const SPLASH_STORAGE_KEY = "nacosSplashLastSeenAt";
+const SPLASH_ONE_DAY_MS = 24 * 60 * 60 * 1000;
+
+// Runs before hydration (and before first paint) to decide whether the
+// splash screen should be skipped, and if so, marks <html> synchronously
+// so CSS can hide it with zero flash. This is what actually makes the
+// splash reliably show up: previously the decision was only made inside a
+// client component's useState initializer, which runs *after* the server
+// HTML (splash-less) has already been sent and often already painted —
+// so the real page flashed in first and the splash either never appeared
+// or appeared after the fact.
+const splashGateScript = `
+(function () {
+  try {
+    var sessionShown = sessionStorage.getItem(${JSON.stringify(SPLASH_SESSION_KEY)});
+    var shouldSkip = false;
+
+    if (sessionShown === "true") {
+      shouldSkip = true;
+    } else {
+      var stored = localStorage.getItem(${JSON.stringify(SPLASH_STORAGE_KEY)});
+      var lastSeen = stored ? Number(stored) : 0;
+      var isExpired = Date.now() - lastSeen > ${SPLASH_ONE_DAY_MS};
+
+      if (isExpired) {
+        localStorage.setItem(${JSON.stringify(SPLASH_STORAGE_KEY)}, String(Date.now()));
+      } else {
+        shouldSkip = true;
+      }
+      sessionStorage.setItem(${JSON.stringify(SPLASH_SESSION_KEY)}, "true");
+    }
+
+    if (shouldSkip) {
+      document.documentElement.classList.add("no-splash");
+    }
+  } catch (e) {}
+})();
+`;
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://nacosfunaab.com"),
@@ -153,6 +199,11 @@ export default function RootLayout({
         className="min-h-full flex flex-col font-sans"
         suppressHydrationWarning
       >
+        <Script
+          id="splash-gate"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{ __html: splashGateScript }}
+        />
         <Providers>
           <SplashScreen>
             <SiteLayout>{children}</SiteLayout>

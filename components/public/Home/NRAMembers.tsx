@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import MemberCard from "./MemberCard";
 import { usePublicExecutives } from "@/hooks/use-executives";
 import { cn } from "@/lib/utils";
+import { useIsRestoring } from "@tanstack/react-query";
 
 export default function NRAMembers({
   limit,
@@ -19,13 +20,20 @@ export default function NRAMembers({
   const pathname = usePathname();
   // Fetching NRA (National Representative Assembly) category
   const nraQuery = usePublicExecutives("NRA");
+  // See Events.tsx for why: keeps SSR and the first client render in
+  // agreement while the persisted cache is being read back, avoiding a
+  // hydration mismatch.
+  const isRestoring = useIsRestoring();
   
   const allNRAMembers = nraQuery.data ?? [];
   const displayedNRAMembers = limit ? allNRAMembers.slice(0, limit) : allNRAMembers;
   const isAboutPage = pathname.includes("/about-us");
 
-  // Show loading spinner during initial load, network errors, or while waiting for data
-  const isWaitingForData = nraQuery.isLoading || nraQuery.isError || displayedNRAMembers.length === 0;
+  // Only show the spinner while we have no cached data at all — a
+  // background refetch error shouldn't kick already-loaded members off
+  // the screen.
+  const isWaitingForData =
+    isRestoring || (nraQuery.isLoading && displayedNRAMembers.length === 0);
   const shouldCenter = centered === "auto" ? displayedNRAMembers.length < 4 : centered;
 
   return (

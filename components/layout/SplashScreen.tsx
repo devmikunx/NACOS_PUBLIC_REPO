@@ -2,14 +2,6 @@
 
 import { useState, useEffect, useMemo } from "react";
 
-const STORAGE_KEY = "nacosSplashLastSeenAt";
-const ONE_DAY_MS = 24 * 60 * 60 * 1000;
-
-// This variable lives outside the component. 
-// It persists as long as the tab is open, preventing the splash 
-// from re-triggering during internal route navigation.
-let hasCheckedSplashInSession = false;
-
 const TYPING_TEXTS = [
   "Initializing NACOS FUNAAB...",
   "Loading computing resources...",
@@ -26,12 +18,21 @@ export default function SplashScreen({
   children: React.ReactNode;
   minDelay?: number;
 }) {
-  const [showSplash, setShowSplash] = useState(false);
+  // Always start "true" on both server and client so the very first
+  // render matches (no hydration mismatch) and the splash is present in
+  // the initial HTML — that's what makes it actually show up instead of
+  // the real page flashing in first. Whether it should be skipped (seen
+  // already today/this session) was already decided synchronously by the
+  // beforeInteractive script in app/layout.tsx, which hides it via the
+  // `no-splash` class before anything paints. We just sync React state to
+  // that decision on mount below.
+  const [showSplash, setShowSplash] = useState(true);
+
   const [displayText, setDisplayText] = useState("");
   const [textIndex, setTextIndex] = useState(0);
   const [showCursor, setShowCursor] = useState(true);
 
-  // Stable particles
+  // Stable particles calculation
   const particles = useMemo(() => 
     Array.from({ length: 20 }, (_, i) => ({
       left: `${(i * 37 + 11) % 100}%`,
@@ -39,35 +40,27 @@ export default function SplashScreen({
       delay: `${(i * 0.3) % 3}s`,
     })), []);
 
+  // On mount, check whether the beforeInteractive script already decided
+  // to skip the splash (already seen it today/this session). If so, drop
+  // it immediately — it was already invisible via CSS the whole time, so
+  // this causes no visible change. Otherwise, run the normal dismissal
+  // timer.
   useEffect(() => {
-    // If we've already handled the splash in this session, don't do anything
-    if (hasCheckedSplashInSession) return;
+    const skip = document.documentElement.classList.contains("no-splash");
+    // Skip case: 0ms so it's dismissed as soon as possible — it was
+    // already invisible via CSS this whole time, so there's nothing to
+    // see. Either way the setState happens inside the timer callback
+    // (async), not synchronously in the effect body.
+    const delay = skip ? 0 : minDelay;
 
-    const checkSplash = () => {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      const lastSeen = stored ? Number(stored) : 0;
-      const isExpired = Date.now() - lastSeen > ONE_DAY_MS;
+    const timer = setTimeout(() => {
+      setShowSplash(false);
+    }, delay);
 
-      if (isExpired) {
-        // Setting state inside requestAnimationFrame satisfies the "no-cascading-renders" rule
-        requestAnimationFrame(() => {
-          setShowSplash(true);
-        });
-        
-        localStorage.setItem(STORAGE_KEY, String(Date.now()));
-
-        setTimeout(() => {
-          setShowSplash(false);
-        }, minDelay);
-      }
-      
-      hasCheckedSplashInSession = true;
-    };
-
-    checkSplash();
+    return () => clearTimeout(timer);
   }, [minDelay]);
 
-  // Typing animation
+  // Typing animation loop
   useEffect(() => {
     if (!showSplash) return;
 
@@ -90,22 +83,24 @@ export default function SplashScreen({
     return () => clearTimeout(timer);
   }, [displayText, textIndex, showSplash]);
 
-  // Cursor blink
+  // Cursor blink loop
   useEffect(() => {
     if (!showSplash) return;
     const id = setInterval(() => setShowCursor((p) => !p), 500);
-    return () => clearInterval(id);
+    return () => clearTimeout(id);
   }, [showSplash]);
 
   return (
     <>
-      {/* The main website content is ALWAYS rendered but hidden from 
-          screen readers while the splash is active */}
+      {/* The main website content */}
       <div aria-hidden={showSplash}>{children}</div>
 
       {/* The Splash Overlay */}
       {showSplash && (
-        <div className="fixed inset-0 bg-zinc-950 flex items-center justify-center z-[9999]">
+        <div
+          id="app-splash"
+          className="fixed inset-0 bg-zinc-950 flex items-center justify-center z-[9999]"
+        >
           <div className="absolute inset-0 bg-gradient-to-br from-zinc-950 via-emerald-950 to-emerald-900 overflow-hidden">
             {particles.map((p, i) => (
               <div
@@ -120,7 +115,7 @@ export default function SplashScreen({
             {SYMBOLS.map((symbol, i) => (
               <div
                 key={i}
-                className="absolute text-emerald-500 font-mono text-xl animate-bounce"
+                className="absolute text-emerald-500 font-mono text-base sm:text-xl animate-bounce"
                 style={{
                   left: `${(i * 18) % 90}%`,
                   top: `${(i * 14) % 80}%`,
@@ -132,30 +127,30 @@ export default function SplashScreen({
             ))}
           </div>
 
-          <div className="relative z-10 w-full max-w-xl px-6">
-            <div className="text-center mb-12">
-              <h1 className="text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-emerald-600">
+          <div className="relative z-10 w-[88%] max-w-sm sm:max-w-md md:max-w-xl mx-auto px-4 sm:px-6">
+            <div className="text-center mb-8 sm:mb-12">
+              <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-emerald-600">
                 NACOS
               </h1>
-              <p className="text-emerald-500/60 font-mono tracking-[0.3em] text-sm mt-2 uppercase">
+              <p className="text-emerald-500/60 font-mono tracking-[0.2em] sm:tracking-[0.3em] text-xs sm:text-sm mt-2 uppercase">
                 Funaab Chapter
               </p>
             </div>
 
-            <div className="bg-black/40 backdrop-blur-md border border-emerald-500/20 rounded-xl p-6 shadow-2xl">
-              <div className="flex gap-2 mb-4">
+            <div className="bg-black/40 backdrop-blur-md border border-emerald-500/20 rounded-xl p-4 sm:p-6 shadow-2xl">
+              <div className="flex gap-2 mb-3 sm:mb-4">
                 <div className="w-2.5 h-2.5 rounded-full bg-red-500/40" />
                 <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/40" />
                 <div className="w-2.5 h-2.5 rounded-full bg-green-500/40" />
               </div>
-              <div className="font-mono text-emerald-400 text-sm sm:text-base">
+              <div className="font-mono text-emerald-400 text-xs sm:text-sm md:text-base break-words">
                 <span className="opacity-50 mr-2">$</span>
                 {displayText}
                 <span className={showCursor ? "opacity-100" : "opacity-0"}>_</span>
               </div>
             </div>
 
-            <div className="mt-8 px-2">
+            <div className="mt-6 sm:mt-8 px-1 sm:px-2">
               <div className="h-1 w-full bg-emerald-950 rounded-full overflow-hidden">
                 <div 
                   className="h-full bg-emerald-500" 

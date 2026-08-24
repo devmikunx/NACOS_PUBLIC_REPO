@@ -11,6 +11,7 @@ import {
   Home,
   Users,
   BookOpen,
+  CalendarDays,
   MessageCircle,
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
@@ -21,6 +22,7 @@ const logo = "/nacos.png";
 const navLinks = [
   { name: "HOME", path: "/", icon: Home },
   { name: "ABOUT", path: "/about-us", icon: Users },
+  { name: "EVENTS", path: "/events", icon: CalendarDays },
   { name: "RESOURCES", path: "/resources", icon: BookOpen },
   { name: "CONTACT US", path: "/help", icon: MessageCircle },
 ];

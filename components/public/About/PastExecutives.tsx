@@ -6,6 +6,7 @@ import { EmptyState } from "@/components/shared/state";
 import { HistoryIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePublicExecutiveSessions } from "@/hooks/use-executive-sessions";
+import { useIsRestoring } from "@tanstack/react-query";
 
 // --- Types ---
 
@@ -70,7 +71,12 @@ function ExecutiveCard({ pe }: { pe: PastExecutiveMember }) {
 // --- Main Component ---
 
 export function PastExecutives() {
-  const { data, isLoading, isError } = usePublicExecutiveSessions();
+  const { data, isLoading } = usePublicExecutiveSessions();
+  // See Events.tsx / HallOfFame.tsx for why: keeps SSR and the first
+  // client render in agreement while the persisted cache is being read
+  // back, avoiding a hydration mismatch.
+  const isRestoring = useIsRestoring();
+  const isWaiting = isRestoring || isLoading;
   const scrollRef = useRef<HTMLDivElement>(null);
   
   const sessions = useMemo<ExecutiveSession[]>(() => data ?? [], [data]);
@@ -91,15 +97,16 @@ export function PastExecutives() {
     }
   };
 
-  // Hide the entire section if there's an error (e.g., no network) or if it's empty
-  if (isError || (!isLoading && sessions.length === 0)) return null;
+  // Same as elsewhere: only hide when there's nothing cached to show at
+  // all, never just because a background refetch errored.
+  if (!isWaiting && sessions.length === 0) return null;
 
   return (
     <section id="past-executives" className="bg-gray-50 py-16 lg:py-24 px-4 sm:px-6">
       <div className="max-w-6xl mx-auto">
         <SectionHeader />
 
-        {!isLoading && sessions.length > 0 && activeSession && (
+        {!isWaiting && sessions.length > 0 && activeSession && (
           <>
             {/* Session Navigation */}
             <div className="mb-10 flex flex-wrap justify-center gap-2">

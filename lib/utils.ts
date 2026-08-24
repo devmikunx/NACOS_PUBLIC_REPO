@@ -27,6 +27,28 @@ export function formatDate(date: string | Date | null | undefined): string {
   }).format(d);
 }
 
+export type EventTimeStatus = "past" | "today" | "upcoming";
+
+// Frontend-only classification — the API doesn't return a status, so we
+// derive one from the event's date compared against the visitor's local
+// "today". Comparison is done on calendar day, not exact time, so an event
+// happening later today still counts as "today" rather than "past".
+export function getEventStatus(date: string | Date | null | undefined): EventTimeStatus {
+  if (!date) return "upcoming";
+  const d = typeof date === "string" ? new Date(date) : date;
+  if (Number.isNaN(d.getTime())) return "upcoming";
+
+  const startOfDay = (value: Date) =>
+    new Date(value.getFullYear(), value.getMonth(), value.getDate()).getTime();
+
+  const eventDay = startOfDay(d);
+  const today = startOfDay(new Date());
+
+  if (eventDay < today) return "past";
+  if (eventDay > today) return "upcoming";
+  return "today";
+}
+
 export function formatDateTime(date: string | Date | null | undefined): string {
   if (!date) return "—";
   const d = typeof date === "string" ? new Date(date) : date;

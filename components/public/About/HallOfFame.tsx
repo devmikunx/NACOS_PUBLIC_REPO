@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { usePublicHallOfFame } from "@/hooks/use-hall-of-fame";
+import { useIsRestoring } from "@tanstack/react-query";
 
 function SkeletonCard() {
   return (
@@ -14,11 +15,20 @@ function SkeletonCard() {
 }
 
 export function HallOfFame() {
-  const { data, isLoading, isError } = usePublicHallOfFame();
+  const { data, isLoading } = usePublicHallOfFame();
+  // True during SSR and until the persisted cache has been read back from
+  // sessionStorage. Treating this the same as "loading" keeps the server
+  // render and the first client render in agreement, avoiding a hydration
+  // mismatch.
+  const isRestoring = useIsRestoring();
   const entries = data ?? [];
+  const isWaiting = isRestoring || isLoading;
 
-  // Hide the entire section if there's an error (e.g. no network) or if it's empty
-  if (isError || (!isLoading && entries.length === 0)) {
+  // Hide only if we have nothing to show (first load, no cache yet, and
+  // either still empty or failed). If we already have cached entries —
+  // from this session or restored from storage — keep showing them even
+  // if a background refetch errors out.
+  if (!isWaiting && entries.length === 0) {
     return null;
   }
 
@@ -38,7 +48,7 @@ export function HallOfFame() {
           </p>
         </div>
 
-        {isLoading && (
+        {isWaiting && (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
             {Array.from({ length: 4 }).map((_, i) => (
               <SkeletonCard key={i} />

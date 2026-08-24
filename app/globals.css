@@ -3,6 +3,17 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/*
+ * Splash-screen "no flash of content" gate.
+ * A beforeInteractive inline script (see app/layout.tsx) decides, before
+ * the browser paints anything, whether the splash should be skipped for
+ * this load. If so it adds `no-splash` to <html> synchronously so this
+ * rule applies before first paint — no visible flash either way.
+ */
+html.no-splash #app-splash {
+  display: none !important;
+}
+
 :root {
   --radius: 1rem;
 

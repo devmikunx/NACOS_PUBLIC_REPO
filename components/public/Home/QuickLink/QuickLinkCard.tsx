@@ -24,10 +24,13 @@ export function QuickLinkCard({
   const cardRef = useRef<HTMLDivElement>(null);
   const Icon = link.icon;
 
-  // Track scroll position specifically as it approaches the sticky docking point
+  // Track scroll position specifically as it approaches the sticky docking point.
+  // Starting later (closer to when the card is actually near its resting spot)
+  // keeps the card at full size for longer, instead of shrinking/stacking
+  // while it's still well below the nav.
   const { scrollYProgress } = useScroll({
     target: cardRef,
-    offset: ["start 70%", "start 20%"],
+    offset: ["start 90%", "start 45%"],
   });
 
   // Scale down smoothly as subsequent cards stack over
@@ -37,8 +40,9 @@ export function QuickLinkCard({
     [1, 1 - (total - index) * 0.035]
   );
 
- 
-  const stickyTop = `calc(10rem + ${index * 1.25}rem)`;
+  // Docking point sits well clear of the fixed nav so the stuck card rests
+  // nearer the middle of the viewport instead of pinned right under it.
+  const stickyTop = `calc(16vh + ${index * 1.25}rem)`;
 
   return (
     <div

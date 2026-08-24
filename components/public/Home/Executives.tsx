@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import MemberCard from "./MemberCard";
 import { usePublicExecutives } from "@/hooks/use-executives";
 import { cn } from "@/lib/utils";
+import { useIsRestoring } from "@tanstack/react-query";
 
 export default function Executives({
   limit,
@@ -18,6 +19,10 @@ export default function Executives({
 }) {
   const pathname = usePathname();
   const executivesQuery = usePublicExecutives("LEADERSHIP");
+  // See Events.tsx for why: keeps SSR and the first client render in
+  // agreement while the persisted cache is being read back, avoiding a
+  // hydration mismatch.
+  const isRestoring = useIsRestoring();
 
   const allExecutives = executivesQuery.data ?? [];
   const displayedExecutives = limit
@@ -26,9 +31,7 @@ export default function Executives({
   const isAboutPage = pathname.includes("/about-us");
 
   const isWaitingForData =
-    executivesQuery.isLoading ||
-    executivesQuery.isError ||
-    displayedExecutives.length === 0;
+    isRestoring || (executivesQuery.isLoading && displayedExecutives.length === 0);
   const shouldCenter =
     centered === "auto" ? displayedExecutives.length < 4 : centered;
 

@@ -4,13 +4,25 @@ import { EventCard } from "./EventCard";
 import { EventsHeader } from "./EventsHeader";
 import { EmptyEvents } from "./EmptyEvents";
 import { usePublicEvents } from "@/hooks/use-community-events";
+import { useIsRestoring } from "@tanstack/react-query";
 
 export default function Events() {
-  const { data: events, isLoading, isError } = usePublicEvents();
+  const { data: events, isLoading } = usePublicEvents();
+  // True during SSR and for the brief window before the persisted cache
+  // has been read back from sessionStorage. We treat that the same as
+  // "loading" so the server render and the first client render agree —
+  // otherwise isLoading can already be false (nothing being fetched yet)
+  // while we still don't actually know if there's cached data, and
+  // server/client pick different branches, which is exactly what a
+  // hydration mismatch is.
+  const isRestoring = useIsRestoring();
 
-  // Treat errors as waiting/loading state so visitors don't see panic/error UI
-  const isWaitingForData = isLoading || isError;
+  // Only show the skeleton while there's genuinely nothing to display yet.
+  // A background refetch failing shouldn't kick already-loaded events off
+  // the screen — they just keep showing until a new fetch actually
+  // succeeds.
   const allEvents = events ?? [];
+  const isWaitingForData = isRestoring || (isLoading && allEvents.length === 0);
 
   return (
     <section id="events" className="relative w-full bg-[#DCEDDA] py-12 lg:py-16 px-4 overflow-hidden border-y border-[#168706]/10">
