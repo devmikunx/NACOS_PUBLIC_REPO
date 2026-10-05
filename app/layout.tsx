@@ -53,7 +53,7 @@ const splashGateScript = `
 `;
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://nacosfunaab.com"),
+  metadataBase: new URL("https://nacosfunaab.com.ng"),
 
   title: {
     default: "NACOS Platform",
@@ -142,7 +142,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_NG",
-    url: "https://nacosfunaab.com",
+    url: "https://nacosfunaab.com.ng",
     siteName: "NACOS Platform",
     title: "NACOS Platform",
     description:

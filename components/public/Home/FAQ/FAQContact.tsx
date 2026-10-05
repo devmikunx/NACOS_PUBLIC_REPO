@@ -12,7 +12,7 @@ export function FAQContact() {
     <div className="text-center mt-16 pt-8 border-t border-white/10">
       <p className="text-white font-black text-xl tracking-tighter mb-1">Need more help?</p>
       <p className="text-white/40 text-xs uppercase tracking-[0.2em] mb-8">
-        {/* FIX: Escaped apostrophe */}
+    
         We&apos;re here to assist via email or WhatsApp
       </p>
 

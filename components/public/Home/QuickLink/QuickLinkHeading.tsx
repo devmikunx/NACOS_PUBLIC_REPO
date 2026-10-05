@@ -31,7 +31,6 @@ export function QuickLinkCTA() {
   return (
     <div className="mt-16 text-center space-y-4">
       <p className="text-sm text-[#082F02]/60 font-medium italic">
-        {/* FIX: Escaped apostrophe here */}
         Can&apos;t find what you&apos;re looking for?
       </p>
       <Link
