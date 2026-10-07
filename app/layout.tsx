@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import Script from "next/script";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import "./globals.css";
@@ -7,23 +6,10 @@ import { Providers } from "@/components/layout/providers";
 import SplashScreen from "@/components/layout/SplashScreen";
 import SiteLayout from "@/components/layout/SiteLayout";
 
-// Keep these in sync with the same-named checks the splash screen itself
-// would otherwise run client-side. They're duplicated here (as plain
-// strings, not imported) because this string is injected into a
-// beforeInteractive <script> tag that runs standalone, before any of our
-// React/TS modules exist.
 const SPLASH_SESSION_KEY = "nacosSplashShownThisSession";
 const SPLASH_STORAGE_KEY = "nacosSplashLastSeenAt";
 const SPLASH_ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
-// Runs before hydration (and before first paint) to decide whether the
-// splash screen should be skipped, and if so, marks <html> synchronously
-// so CSS can hide it with zero flash. This is what actually makes the
-// splash reliably show up: previously the decision was only made inside a
-// client component's useState initializer, which runs *after* the server
-// HTML (splash-less) has already been sent and often already painted —
-// so the real page flashed in first and the splash either never appeared
-// or appeared after the fact.
 const splashGateScript = `
 (function () {
   try {
@@ -195,15 +181,13 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${GeistSans.variable} ${GeistMono.variable} h-full antialiased`}
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: splashGateScript }} />
+      </head>
       <body
         className="min-h-full flex flex-col font-sans"
         suppressHydrationWarning
       >
-        <Script
-          id="splash-gate"
-          strategy="beforeInteractive"
-          dangerouslySetInnerHTML={{ __html: splashGateScript }}
-        />
         <Providers>
           <SplashScreen>
             <SiteLayout>{children}</SiteLayout>
