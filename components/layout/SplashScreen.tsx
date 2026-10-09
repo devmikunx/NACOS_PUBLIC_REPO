@@ -40,17 +40,10 @@ export default function SplashScreen({
       delay: `${(i * 0.3) % 3}s`,
     })), []);
 
-  // On mount, check whether the beforeInteractive script already decided
-  // to skip the splash (already seen it today/this session). If so, drop
-  // it immediately — it was already invisible via CSS the whole time, so
-  // this causes no visible change. Otherwise, run the normal dismissal
-  // timer.
+
   useEffect(() => {
     const skip = document.documentElement.classList.contains("no-splash");
-    // Skip case: 0ms so it's dismissed as soon as possible — it was
-    // already invisible via CSS this whole time, so there's nothing to
-    // see. Either way the setState happens inside the timer callback
-    // (async), not synchronously in the effect body.
+   
     const delay = skip ? 0 : minDelay;
 
     const timer = setTimeout(() => {

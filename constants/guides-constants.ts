@@ -118,7 +118,7 @@ export const guides: Guide[] = [
           "Click 'Continue' or 'Proceed to Payment'",
           "Review the summary screen showing: Student name, Matric number, Payment type, Amount",
           "The portal will open payment gateway (popup or inline page)",
-          "Choose payment method: Card, Bank Transfer, USSD, or Mobile Payment",
+          "Choose payment method: Card, Bank Transfer, or Mobile Payment",
           "Enter payment details (card number, expiry, CVV, etc.)",
           "If required, enter OTP sent to your phone/email for 3D Secure",
           "Click 'Pay Now' or 'Authorize Payment'",

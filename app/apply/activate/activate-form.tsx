@@ -14,9 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { FormField } from "@/components/shared/form-field";
 
-// Mirrors backend onboarding.validation.ts's activateFinanceDirectorSchema
-// exactly — note this is a plain 8-char minimum, not the uppercase+number
-// rule used elsewhere (see lib/validation.ts's comment on that one).
+
 const schema = z
   .object({
     newPassword: z.string().min(8, "Password must be at least 8 characters"),

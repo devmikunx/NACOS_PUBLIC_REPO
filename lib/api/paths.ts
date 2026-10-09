@@ -1,7 +1,4 @@
-// Every literal path string used anywhere in the app lives here, built
-// directly from the backend's route files (spec §5) — single source of
-// truth so a typo can't silently diverge between a Server Component read
-// and a Client Component mutation of the same resource.
+
 export const paths = {
   tenants: {
     public: "/tenants/public",
