@@ -21,10 +21,10 @@ export function HeroImage() {
         <div className="relative z-10 w-full">
           {/* Picture tag handles AVIF with WebP fallback */}
           <picture>
-            <source srcSet="/images/digifet.avif" type="image/avif" />
-            <source srcSet="/images/digifet.webp" type="image/webp" />
+            <source srcSet="/images/orientation.avif" type="image/avif" />
+            <source srcSet="/images/orientation.webp" type="image/webp" />
             <img
-              src="/images/digifet.webp"
+              src="/images/orientation.webp"
               alt="NACOS FUNAAB students collaborating"
               width={1200}
               height={800}
