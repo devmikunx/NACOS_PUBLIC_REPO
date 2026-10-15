@@ -19,10 +19,10 @@ export function AboutImage({ shouldReduceMotion }: { shouldReduceMotion: boolean
     >
       <div className="relative w-full h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px] rounded-2xl overflow-hidden shadow-2xl border-8 border-white/50">
         <picture className="w-full h-full">
-          <source srcSet="/images/tech.avif" type="image/avif" />
-          <source srcSet="/images/tech.webp" type="image/webp" />
+          <source srcSet="/images/nacos.avif" type="image/avif" />
+          <source srcSet="/images/nacos.webp" type="image/webp" />
           <img
-            src="/images/tech.webp"
+            src="/images/nacos.webp"
             alt="NACOS FUNAAB students collaborating"
             loading="lazy"
             decoding="async"
